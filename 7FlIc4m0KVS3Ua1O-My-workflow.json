@@ -1,0 +1,211 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const timestamp = Number(item.json.internalDate);\n  const dateObj = new Date(timestamp);\n\n  const formattedDate = dateObj.toLocaleDateString();  // e.g., \"4/10/2025\"\n  const formattedTime = dateObj.toLocaleTimeString();  // e.g., \"10:32:15 AM\"\n\n  return {\n    json: {\n      from: item.json.From,\n      subject: item.json.subject,\n      snippet: `*${item.json.snippet || 'No snippet available'}*`,\n      date: formattedDate,\n      time: formattedTime\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        0
+      ],
+      "id": "d299a963-9dcd-4811-80b1-e11855677cc9",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1WOjMSVunUlsVBVNfZmy_OgVR17SfK2G3ANqXtAFGxT8",
+          "mode": "list",
+          "cachedResultName": "Format Sheet API",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WOjMSVunUlsVBVNfZmy_OgVR17SfK2G3ANqXtAFGxT8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WOjMSVunUlsVBVNfZmy_OgVR17SfK2G3ANqXtAFGxT8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "from": "={{ $json.from }}",
+            "snippet": "={{ $json.snippet }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "from",
+              "displayName": "from",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "snippet",
+              "displayName": "snippet",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        300,
+        0
+      ],
+      "id": "316f76be-cb84-4d94-ad8c-480edb381475",
+      "name": "Google Sheets",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "F9kMiWWzYaTsIDqR",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            },
+            {
+              "hour": 23
+            }
+          ]
+        },
+        "filters": {
+          "q": "subject:job OR subject:application OR subject:interview"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -180,
+        0
+      ],
+      "id": "282aacda-180c-450e-b9be-5724d4edeb75",
+      "name": "Gmail Trigger1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "708QtRh6BDQOJBrB",
+          "name": "Gmail account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+14155238886",
+        "to": "+919900237316",
+        "toWhatsapp": true,
+        "message": "={{ $('Code').item.json.from }}\n{{ $('Code').item.json.snippet }}\n{{ $('Code').item.json.date }}\n{{ $('Code').item.json.time }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        540,
+        0
+      ],
+      "id": "09989ab3-e9c2-4122-ae4a-7a0d733860e6",
+      "name": "Twilio",
+      "credentials": {
+        "twilioApi": {
+          "id": "TiEk1vEP9KYnv3QS",
+          "name": "Twilio account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Twilio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Gmail Trigger1": {
+      "Gmail Trigger1": {
+        "lastTimeChecked": 1745310975,
+        "possibleDuplicates": [
+          "1965ca40cb22c7b1",
+          "1965c5c73e4d16cf"
+        ]
+      }
+    }
+  },
+  "pinData": {},
+  "triggerCount": 1,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
